@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from tinydb import TinyDB, Query
 from tinydb.queries import QueryLike
 
@@ -9,13 +9,14 @@ WORK_PHONE_NUMBER_PATTERN = PERSONAL_PHONE_NUMBER_PATTERN
 
 
 class Phonebook:
-    __contacts: TinyDB = TinyDB("phonebook.json")
+    def __init__(self, file_path: str = "phonebook.json") -> None:
+        self.__contacts: TinyDB = TinyDB(file_path)
 
     def get_all_contacts(self):
         return self.__contacts.all()
 
     def add_contact(self, first_name: str, last_name: str,  patronymic: str, organization: str, office_number: str,
-                    personal_number: str) -> int | None:
+                    personal_number: str) -> dict:
         """Добавляет контакт в базу данных.
 
         Args:
@@ -30,17 +31,25 @@ class Phonebook:
             personal_number: Рабочий номер. Пример: "89876543210".
 
         Returns:
-            id объекта, если добавляемый объект не существует, иначе None.
-        """
+            Словарь, содержащий ключи "success", "message", и, если контакт успешно добавлен, ключ "id". Параметр
+            "success" принимает значение True, если запись добавлена, иначе False. Параметр "message" передает
+            информацию о результате функции. Параметр "id" возвращает id добавленной записи. Примеры:
+            {"success": True, "message": "Контакт успешно создан!", "id": 3}
+            {"success": False, "message": "Контакт с таким личным номером уже создан"}
 
-        contact: Phonebook.__Contact = self.__Contact(
-            first_name=first_name, last_name=last_name, patronymic=patronymic, organization=organization,
-            office_number=office_number, personal_number=personal_number
-        )
-        if contact.dict() not in self.__contacts:
-            result: int = self.__contacts.insert(contact.dict())
-            return result
-        return None
+        """
+        try:
+            if not self.__contacts.contains(Query().personal_number == personal_number):
+                contact: Phonebook.__Contact = self.__Contact(
+                    first_name=first_name, last_name=last_name, patronymic=patronymic, organization=organization,
+                    office_number=office_number, personal_number=personal_number
+                )
+                result: int = self.__contacts.insert(contact.model_dump())
+                return {"success": True, "message": "Контакт успешно создан!", "id": result}
+            else:
+                return {"success": False, "message": "Контакт с таким личным номером уже создан."}
+        except ValidationError as e:
+            return {"success": False, "message": "Переданы некорректные данные."}
 
     def get_contacts(self, **kwargs) -> list:
         """Поиск списка контактов.
@@ -58,6 +67,9 @@ class Phonebook:
               'office_number': '83333333333', 'personal_number': '84444444444'}
             ]
         """
+        if not kwargs:
+            return self.get_all_contacts()
+
         search_query: QueryLike = self.__make_query(**kwargs)
 
         if search_query:
@@ -65,18 +77,40 @@ class Phonebook:
             return contacts
         return []
 
-    def delete_contact(self, **kwargs) -> bool:
+    def delete_contact(self, personal_number: str) -> dict:
         """Удаление контакта.
 
-        Удаление контакта в том случае, если контакт существует в единственном числе. Если найдено несколько
+        Удаление контакта в том случае, если контакт существует в единственном числе.
+
+        Args:
+            personal_number: персональный номер телефона контакта. Используется как уникальный ключ.
+
+        Returns:
+            Returns:
+            Словарь, содержащий ключи "success" и "message". Параметр "success" принимает значение True, если запись
+            удалена, иначе False. Параметр "message" передает информацию о результате функции. Примеры:
+            {"success": True, "message": "Контакт успешно удален!"}
+            {"success": False, "message": "Такого контакта не существует."}
+        """
+        search_query: QueryLike = self.__make_query(personal_number=personal_number)
+
+        if search_query:
+            self.__contacts.remove(search_query)
+            return {"success": True, "message": "Контакт успешно удален!"}
+        return {"success": False, "message": "Такого контакта не существует."}
+
+    def update_contact(self, **kwargs) -> bool:
+        """Обновление контакта.
+
+        Обновление контакта в том случае, если контакт существует в единственном числе. Если найдено несколько
         вариантов, то возникает ValueError.
 
         Args:
-            **kwargs: параметры удаляемого контакта. Поиск может происходить по следующим параметрам: first_name,
+            **kwargs: параметры обновляемого контакта. Поиск может происходить по следующим параметрам: first_name,
                 last_name, patronymic, organization, office_number, personal_number.
 
         Returns:
-            True, если объект был удален, иначе False.
+            True, если объект был обновлен, иначе False.
 
         Raises:
             ValueError: Если по заданным параметрам найдено несколько записей.
@@ -89,8 +123,11 @@ class Phonebook:
                 self.__contacts.remove(search_query)
                 return True
             elif len(contacts) > 1:
-                raise ValueError('Несколько объектов для удаления')
+                raise ValueError("Несколько объектов для удаления")
         return False
+
+    def close_db(self):
+        self.__contacts.close()
 
     @staticmethod
     def __make_query(**kwargs) -> QueryLike | None:
@@ -111,7 +148,6 @@ class Phonebook:
                 search_query &= (query[key] == value)
         return search_query
 
-
     class __Contact(BaseModel):
         """Класс для валидации информации о контакте."""
         first_name: str = Field(pattern=NAME_PATTERN)
@@ -121,23 +157,23 @@ class Phonebook:
         office_number: str = Field(pattern=WORK_PHONE_NUMBER_PATTERN)
         personal_number: str = Field(pattern=PERSONAL_PHONE_NUMBER_PATTERN)
 
-    # def update_contact(self, ):
-
-
 
 data = {
-    "first_name": "Марсель",
+    "first_name": "Артемий",
     "last_name": "Рашитов",
     "patronymic": "Приколистов",
     "organization": "йцуйцу",
     "office_number": "89991575858",
-    "personal_number": "89991585858",
+    "personal_number": "89992585818",
 }
 if __name__ == "__main__":
     p = Phonebook()
-    # p.add_contact(first_name="Мсарсель", last_name="Привет", patronymic="Ффыв", organization="фысчя", office_number="89991575959", personal_number="89991212222")
     # print(c)
-    print(p.get_all_contacts())
-    c = p.delete_contact(office_number="89991575959", patronymic='Ффыв',)
-    print(c)
-    print(p.get_all_contacts())
+    r = p.add_contact(**data)
+    print(r)
+    # new_data = data.copy()
+    # new_data["first_name"] = "Яков"
+    print(sorted(p.get_contacts(), key=lambda x: (x['last_name'], x['first_name'])))
+    # c = p.delete_contact(office_number="89991575959", patronymic="Ффыв",)
+    # print(c)
+    # print(p.get_all_contacts())
