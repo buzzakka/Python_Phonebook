@@ -86,45 +86,33 @@ class Phonebook:
             personal_number: персональный номер телефона контакта. Используется как уникальный ключ.
 
         Returns:
-            Returns:
             Словарь, содержащий ключи "success" и "message". Параметр "success" принимает значение True, если запись
             удалена, иначе False. Параметр "message" передает информацию о результате функции. Примеры:
             {"success": True, "message": "Контакт успешно удален!"}
-            {"success": False, "message": "Такого контакта не существует."}
+            {"success": False, "message": "Контакта не существует."}
         """
-        search_query: QueryLike = self.__make_query(personal_number=personal_number)
-
-        if search_query:
-            self.__contacts.remove(search_query)
+        if self.__contacts.contains(Query().personal_number == personal_number):
+            self.__contacts.remove(Query().personal_number == personal_number)
             return {"success": True, "message": "Контакт успешно удален!"}
-        return {"success": False, "message": "Такого контакта не существует."}
+        return {"success": False, "message": "Контакта не существует."}
 
-    def update_contact(self, **kwargs) -> bool:
-        """Обновление контакта.
-
-        Обновление контакта в том случае, если контакт существует в единственном числе. Если найдено несколько
-        вариантов, то возникает ValueError.
+    def update_contact(self, personal_num: str, **kwargs) -> dict:
+        """Обновление контакта по персональному номеру телефона.
 
         Args:
-            **kwargs: параметры обновляемого контакта. Поиск может происходить по следующим параметрам: first_name,
-                last_name, patronymic, organization, office_number, personal_number.
+            personal_num: Персональный номер телефона контакта, который будет обновлен.
+            **kwargs: Параметры, которые нужно обновить в контакте. Могут включать first_name, last_name,
+                     patronymic, organization, office_number и другие поля контакта.
 
         Returns:
-            True, если объект был обновлен, иначе False.
-
-        Raises:
-            ValueError: Если по заданным параметрам найдено несколько записей.
+            Словарь, содержащий ключ "success" и "message". Параметр "success" принимает значение True, если контакт
+            успешно обновлен, иначе False. Параметр "message" передает информацию о результате функции.
         """
-        search_query: QueryLike = self.__make_query(**kwargs)
-
-        if search_query:
-            contacts: list = self.__contacts.search(search_query)
-            if len(contacts) == 1:
-                self.__contacts.remove(search_query)
-                return True
-            elif len(contacts) > 1:
-                raise ValueError("Несколько объектов для удаления")
-        return False
+        if self.__contacts.contains(Query().personal_number == personal_num):
+            self.__contacts.update(kwargs, Query().personal_number == personal_num)
+            return {"success": True, "message": "Контакт успешно обновлен!"}
+        else:
+            return {"success": False, "message": "Контакт не найден."}
 
     def close_db(self):
         self.__contacts.close()
@@ -156,24 +144,3 @@ class Phonebook:
         organization: str
         office_number: str = Field(pattern=WORK_PHONE_NUMBER_PATTERN)
         personal_number: str = Field(pattern=PERSONAL_PHONE_NUMBER_PATTERN)
-
-
-data = {
-    "first_name": "Артемий",
-    "last_name": "Рашитов",
-    "patronymic": "Приколистов",
-    "organization": "йцуйцу",
-    "office_number": "89991575858",
-    "personal_number": "89992585818",
-}
-if __name__ == "__main__":
-    p = Phonebook()
-    # print(c)
-    r = p.add_contact(**data)
-    print(r)
-    # new_data = data.copy()
-    # new_data["first_name"] = "Яков"
-    print(sorted(p.get_contacts(), key=lambda x: (x['last_name'], x['first_name'])))
-    # c = p.delete_contact(office_number="89991575959", patronymic="Ффыв",)
-    # print(c)
-    # print(p.get_all_contacts())
