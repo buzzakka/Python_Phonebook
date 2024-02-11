@@ -5,8 +5,7 @@ from phonebook import Phonebook
 class View:
     phonebook = Phonebook()
 
-    @staticmethod
-    def print_main_menu():
+    def print_main_menu(self) -> None:
         """Отрисовка меню"""
         View.clear_console()
         tprint("PhoneBook")
@@ -17,7 +16,41 @@ class View:
         print("4. Изменить контакт.")
         print("5. Удалить контакт.")
         print("0. Выход.\n")
-        choice: int = View.get_users_menu_choice(1, 5)
+        self.get_users_menu_choice(1, 5)
+        self.get_all_contacts()
+
+    def print_paginated_contacts(self, paginated_list: list) -> None:
+        counter: int = 1
+        while
+
+    def get_all_contacts(self) -> None:
+        contacts: list = self.phonebook.get_contacts()
+        sorted_contacts: list = self.get_sorted_list(contacts)
+        paginated_list: list = self.get_paginated_list(sorted_contacts)
+        return paginated_list
+
+    @staticmethod
+    def get_sorted_list(contacts: list) -> list:
+        sorted_contacts: list = sorted(
+            contacts, key=lambda x: (x["last_name"], x["first_name"], x["patronymic"], x["organization"])
+        )
+        return sorted_contacts
+
+    @staticmethod
+    def get_paginated_list(contacts: list, num_at_page: int = 1) -> list:
+        result: list = []
+        counter: int = 0
+        current_list: list = []
+        for elem in contacts:
+            current_list.append(elem)
+            counter += 1
+            if counter == num_at_page:
+                result.append(current_list)
+                counter = 0
+                current_list = []
+        if counter % num_at_page != 0:
+            result.append(current_list)
+        return result
 
     @staticmethod
     def get_users_menu_choice(min_value: int, max_value: int):
@@ -42,7 +75,8 @@ class View:
     @staticmethod
     def run_app():
         """Запуск приложения"""
-        View.print_main_menu()
+        view: View = View()
+        view.print_main_menu()
 
 
 if __name__ == "__main__":
