@@ -1,13 +1,14 @@
-PYTHON = python3
-REQUIREMENTS = rerequirements.txt
+REQUIREMENTS = requirements.txt
+BIN = ./venv/bin/
+PYTHON3 = $(BIN)python3
 
-all: test
+all: venv run_app
 
 #	== Тестирование ==
 .PHONY: test
 test:
 	@echo -------------------- RUN TESTS --------------------
-	$(PYTHON) -m unittest discover .
+	$(PYTHON3) -m unittest discover .
 
 #	== Отчистка от временных файлов ==
 .PHONY: clean
@@ -18,7 +19,10 @@ clean:
 #	== Установка виртуального окружения ==
 .PHONY: venv
 venv:
-    @echo -------------------- INSTALL VENV --------------------
-	python -m venv venv
-	source venv/bin/activate
-	pip install -r $(REQUIREMENTS)
+	@echo -------------------- INSTALL VENV --------------------
+	$(PYTHON3) -m venv venv
+	$(BIN)pip3 install -r $(REQUIREMENTS)
+
+.PHONY: run_app
+run_app:
+	$(PYTHON3) app.py

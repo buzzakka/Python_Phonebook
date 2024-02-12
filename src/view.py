@@ -1,6 +1,6 @@
 from art import tprint
 from tabulate import tabulate
-from phonebook import Phonebook, NAME_PATTERN, PERSONAL_PHONE_NUMBER_PATTERN, WORK_PHONE_NUMBER_PATTERN
+from src.phonebook import Phonebook, NAME_PATTERN, PERSONAL_PHONE_NUMBER_PATTERN, WORK_PHONE_NUMBER_PATTERN
 import re
 
 RED_COLOR = "\u001b[31m"
