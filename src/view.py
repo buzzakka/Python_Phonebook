@@ -8,6 +8,8 @@ BLUE_COLOR = "\u001b[34m"
 GREEN_COLOR = "\u001b[32m"
 END_COLOR = "\033[0m"
 
+PAGINATION = 7
+
 
 class View:
     __phonebook: Phonebook = Phonebook()
@@ -325,7 +327,7 @@ class View:
         return sorted_contacts_with_index
 
     @staticmethod
-    def get_paginated_list(contacts: list, num_at_page: int = 5) -> list:
+    def get_paginated_list(contacts: list, num_at_page: int = PAGINATION) -> list:
         """Получение списка контактов с пагинацией
 
         Args:
