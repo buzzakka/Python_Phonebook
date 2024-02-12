@@ -1,6 +1,7 @@
 REQUIREMENTS = requirements.txt
 BIN = ./venv/bin/
-PYTHON3 = $(BIN)python3
+BIN_PYTHON3 = $(BIN)python3
+PYTHON = python3
 
 all: venv run_app
 
@@ -8,7 +9,7 @@ all: venv run_app
 .PHONY: test
 test:
 	@echo -------------------- RUN TESTS --------------------
-	$(PYTHON3) -m unittest discover .
+	$(BIN_PYTHON3) -m unittest discover .
 
 #	== Отчистка от временных файлов ==
 .PHONY: clean
@@ -20,9 +21,9 @@ clean:
 .PHONY: venv
 venv:
 	@echo -------------------- INSTALL VENV --------------------
-	$(PYTHON3) -m venv venv
+	$(PYTHON) -m venv venv
 	$(BIN)pip3 install -r $(REQUIREMENTS)
 
 .PHONY: run_app
 run_app:
-	$(PYTHON3) app.py
+	$(BIN_PYTHON3) app.py
