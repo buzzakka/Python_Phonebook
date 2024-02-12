@@ -6,7 +6,6 @@ import os
 class TestPhonebook(TestCase):
     @classmethod
     def setUpClass(cls):
-        # Путь к тестовой базе данных
         cls.db_path = "tests/test_bd.json"
 
         cls.user_data: dict = {
