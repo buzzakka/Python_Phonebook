@@ -59,28 +59,27 @@ class View:
         """Отрисовка контактов с пагинацией
 
         Args:
-            contacts (list): Список контактов в формате [{contact_1}, {contact_2}, ...]
+            contacts: Список контактов в формате [{contact_1}, {contact_2}, ...]
         """
         if len(contacts) == 0:
-            self.clear_console()
             print(f"{BLUE_COLOR}Все контакты:{END_COLOR}")
-            input("Список контактов пуст. Нажмите любую клавишу для выхода в меню...")
+            input(f"{RED_COLOR}Список контактов пуст. Нажмите любую клавишу для выхода в меню...{END_COLOR}")
             return
 
-        paginated_contacts = self.get_paginated_list(contacts)
+        paginated_contacts: list = self.get_paginated_list(contacts)
         max_page = len(paginated_contacts)
-        current_page = 1
+        current_page: int = 1
         while True:
             self.clear_console()
             print(f"{BLUE_COLOR}Все контакты:{END_COLOR}\n")
             self.draw_contacts_table(paginated_contacts[current_page - 1])
-            print(f"\nСтр. {current_page}/{max_page}")
+            print(f"\nСтр. {current_page}/{max_page}\n")
 
             if max_page == 1:
-                print("Введите 0 для выхода.")
+                print("Нажмите [0] для выхода.")
             else:
                 print(
-                    f"Введите номер страницы [{1}-{max_page}], или -/+ для перехода между страницами. Введите 0 для "
+                    f"[{1}-{max_page}] для перехода к странице, или [-]/[+] для перехода между страницами. [0] для "
                     f"выхода в меню.")
 
             choice = input("Выберите: ")
@@ -92,15 +91,6 @@ class View:
                 current_page = int(choice)
             elif choice == "0":
                 break
-
-    def draw_update_contact_page(self):
-        self.clear_console()
-        print("Обновить контакт:")
-        pesonal_number: str = input("Введите личный номер телефона существуюего контакта: ")
-        if self.__phonebook.get_contacts(personal_number=pesonal_number):
-            print(2)
-        else:
-            input("Контакта с таким личным номером не существует. Нажмите любую клавишу для выхода в меню...")
 
     @staticmethod
     def draw_contacts_table(contacts: list) -> None:
@@ -119,6 +109,7 @@ class View:
     def draw_all_contacts_page(self) -> None:
         """Отрисовка раздела со всеми контактами"""
         contacts: list = self.get_contacts_wiht_filtres()
+        self.clear_console()
         self.draw_paginated_contacts(contacts)
 
     def get_contacts_wiht_filtres(self, **kwargs) -> list:
@@ -139,7 +130,7 @@ class View:
     def draw_get_contacts_page(self) -> None:
         """Отрисовка раздела с поиском контактов"""
         self.clear_console()
-        print("Поиск контактов.\n")
+        print(f"{BLUE_COLOR}Поиск контактов.{END_COLOR}\n")
         data: dict = {
             "last_name": input("Введите Фамилию: "),
             "first_name": input("Введите Имя: "),
@@ -151,8 +142,10 @@ class View:
         result_data: dict = {key: value for key, value in data.items() if value}
         contacts: list = self.get_contacts_wiht_filtres(**result_data)
         if len(contacts) == 0:
-            input("Контактов не найдено, нажмите любую клавишу для выхода...")
+            input(f"\n{RED_COLOR}Контактов не найдено, нажмите любую клавишу для выхода...{END_COLOR}")
         else:
+            self.clear_console()
+            print(f"{BLUE_COLOR}Поиск контактов.{END_COLOR}\n")
             self.draw_paginated_contacts(contacts)
 
     def draw_add_new_contact(self):
@@ -187,23 +180,24 @@ class View:
         }
         result = self.__phonebook.add_contact(**data)
         print(result["message"])
+        print()
         input("Нажмите любую клавишу чтобы продолжить...")
 
-    def draw_update_contact(self):
+    def draw_update_contact(self) -> None:
         """Обновление существующего контакта
 
         Для обновления необходимо ввести номер телефона существующего контакта.
         """
         self.clear_console()
         print("Обновление контакта:")
-        personal_number = self.get_correct_param(
+        personal_number: str = self.get_correct_param(
             "Введите личный номер телефона в формате 89999999999. Номер должен существовать в базе. Номер не"
             "должен содержать лишних символов и должен содержать 11 цифр.",
             pattern=PERSONAL_PHONE_NUMBER_PATTERN)
         contacts: list = self.__phonebook.get_contacts(personal_number=personal_number)
         if contacts:
             self.clear_console()
-            print("Найден следующий контакт:\n")
+            print(f"{BLUE_COLOR}Найден следующий контакт:{END_COLOR}\n")
             self.draw_contacts_table(self.get_sorted_list(contacts))
             print()
             contact: dict = contacts[0]
@@ -244,9 +238,13 @@ class View:
                 ),
             }
             result: dict = self.__phonebook.update_contact(personal_num=contact["personal_number"], **data)
-            print(result["message"])
+            if result["success"]:
+                print(GREEN_COLOR + result["message"] + END_COLOR)
+            else:
+                print(RED_COLOR + result["message"] + END_COLOR)
         else:
-            print("Контакта с таким личным номером не существует.")
+            print(f"{RED_COLOR}Контакта с таким личным номером не существует.{END_COLOR}")
+        print()
         input("Нажмите на любую клавишу чтобы продолжить...")
 
     def draw_delete_contact(self):
@@ -255,7 +253,7 @@ class View:
         Для удаления необходимо ввести номер телефона существующего контакта.
         """
         self.clear_console()
-        print("Удаление контакта:")
+        print(f"{BLUE_COLOR}Удаление контакта:{END_COLOR}")
         personal_number = self.get_correct_param(
             "Введите личный номер телефона в формате 89999999999. Номер должен существовать в базе. Номер не"
             "должен содержать лишних символов и должен содержать 11 цифр.",
@@ -268,13 +266,16 @@ class View:
             choice = input("Уверены, что хотите удалить контакт? [Да/Нет]: ")
             if choice.lower() == "да":
                 result: dict = self.__phonebook.delete_contact(personal_number=personal_number)
-                print(result["message"])
+                if result["success"]:
+                    print(GREEN_COLOR + result["message"] + END_COLOR)
+                else:
+                    print(RED_COLOR + result["message"] + END_COLOR)
             else:
-                print("Контакт не был удален.")
+                print(f"{RED_COLOR}Контакт не был удален.{END_COLOR}")
         else:
-            print("Контакта с таким личным номером не существует.")
+            print(f"{RED_COLOR}Контакта с таким личным номером не существует.{END_COLOR}")
+        print()
         input("Нажмите на любую клавишу чтобы продолжить...")
-
 
     @staticmethod
     def get_correct_param(help_text: str, default_value: str | None = None, pattern: str = "\\w+") -> str:
@@ -284,8 +285,9 @@ class View:
         Если параметр введен неправильно, то у пользователя повторно запросятся данные.
 
         Args:
-            help_text (str): Текст с подсказкой для параметра. Будете выводится перед input.
-            pattern (str): Паттерн регулярного выражения, на основании которого будет проводится проверка корректности
+            help_text: Текст с подсказкой для параметра. Будете выводится перед input.
+            default_value: Дефолтное значение для параметров.
+            pattern: Паттерн регулярного выражения, на основании которого будет проводится проверка корректности
                 введеынх пользователем данных. Если параметр не введен, то допускается любые названия (кроме пустых
                 строк).
 
@@ -294,11 +296,13 @@ class View:
         """
         print(help_text)
         param: str = input("Введите значение: ")
+        print()
         if not param and default_value is not None:
             return default_value
         while re.match(pattern, param) is None:
-            print(f"Введены некорректные данные. {help_text}")
+            print(f"{RED_COLOR}Введены некорректные данные. {help_text} {END_COLOR}")
             param: str = input("Введите значение: ")
+            print()
         return param
 
     @staticmethod
@@ -318,7 +322,7 @@ class View:
         return sorted_contacts_with_index
 
     @staticmethod
-    def get_paginated_list(contacts: list, num_at_page: int = 2) -> list:
+    def get_paginated_list(contacts: list, num_at_page: int = 5) -> list:
         """Получение списка контактов с пагинацией
 
         Args:
@@ -347,13 +351,3 @@ class View:
     def clear_console() -> None:
         """Отчистка консоли"""
         print("\033[H\033[J")
-
-    @staticmethod
-    def run_app() -> None:
-        """Запуск приложения"""
-        view: View = View()
-        view.draw_main_menu()
-
-
-if __name__ == "__main__":
-    View.run_app()

@@ -196,4 +196,3 @@ class TestPhonebook(TestCase):
         self.phonebook.add_contact(**self.user_data)
         result: dict = self.phonebook.update_contact("81110200202", **self.user_data)
         assert result == {"success": False, "message": "Контакт не найден."}
-
