@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field, ValidationError
 from tinydb import TinyDB, Query
 from tinydb.queries import QueryLike
 
-
 NAME_PATTERN = "^[А-Я][а-я]*$"
 PERSONAL_PHONE_NUMBER_PATTERN = "^\d{11}$"
 WORK_PHONE_NUMBER_PATTERN = PERSONAL_PHONE_NUMBER_PATTERN
@@ -15,7 +14,7 @@ class Phonebook:
     def get_all_contacts(self):
         return self.__contacts.all()
 
-    def add_contact(self, first_name: str, last_name: str,  patronymic: str, organization: str, office_number: str,
+    def add_contact(self, first_name: str, last_name: str, patronymic: str, organization: str, office_number: str,
                     personal_number: str) -> dict:
         """Добавляет контакт в базу данных.
 
@@ -48,7 +47,7 @@ class Phonebook:
                 return {"success": True, "message": "Контакт успешно создан!", "id": result}
             else:
                 return {"success": False, "message": "Контакт с таким личным номером уже создан."}
-        except ValidationError as e:
+        except ValidationError:
             return {"success": False, "message": "Переданы некорректные данные."}
 
     def get_contacts(self, **kwargs) -> list:
