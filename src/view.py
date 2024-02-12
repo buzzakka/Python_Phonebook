@@ -179,7 +179,10 @@ class View:
             ),
         }
         result = self.__phonebook.add_contact(**data)
-        print(result["message"])
+        if result["success"]:
+            print(GREEN_COLOR + result["message"] + END_COLOR)
+        else:
+            print(RED_COLOR + result["message"] + END_COLOR)
         print()
         input("Нажмите любую клавишу чтобы продолжить...")
 
