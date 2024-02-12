@@ -32,6 +32,10 @@ class View:
                     self.draw_get_contacts_page()
                 case "3":
                     self.draw_add_new_contact()
+                case "4":
+                    self.draw_update_contact()
+                case "5":
+                    self.draw_delete_contact()
                 case "0":
                     break
 
@@ -73,6 +77,15 @@ class View:
             elif choice == "0":
                 break
 
+    def draw_update_contact_page(self):
+        self.clear_console()
+        print("Обновить контакт:")
+        pesonal_number: str = input("Введите личный номер телефона существуюего контакта: ")
+        if self.phonebook.get_contacts(personal_number=pesonal_number):
+            print(2)
+        else:
+            input("Контакта с таким личным номером не существует. Нажмите любую клавишу для выхода в меню...")
+
     @staticmethod
     def draw_contacts_table(contacts: list) -> None:
         """Отрисовка контактов в виде таблицы
@@ -101,7 +114,7 @@ class View:
             **kwargs (dict): список фильтров
 
         Returns:
-            sorted_contacts: отсортированный список в формате [{contact_1}, {contact_2}, ...]
+            Отсортированный список в формате [{contact_1}, {contact_2}, ...]
         """
         contacts: list = self.phonebook.get_contacts(**kwargs)
         sorted_contacts: list = self.get_sorted_list(contacts)
@@ -127,51 +140,128 @@ class View:
             self.draw_paginated_contacts(contacts)
 
     def draw_add_new_contact(self):
-        """Добавление нового контакта
-
-        Предоставляет пользовотелю возможность ввести данные, которые проверяеются на соответствие определенному
-        шаблону.
-        """
+        """Добавление нового контакта"""
         self.clear_console()
         data: dict = {
             "first_name": self.get_correct_param(
-                "Добавить новый контакт.\n"
                 "Введите имя. Имя должно содержать только кириллицу и начинаться с заглавной буквы.",
-                NAME_PATTERN
+                pattern=NAME_PATTERN
             ),
             "last_name": self.get_correct_param(
-                "Добавить новый контакт.\n"
                 "Введите фамилию. Фамилия должна содержать только кириллицу и начинаться с заглавной буквы.",
-                NAME_PATTERN
+                pattern=NAME_PATTERN
             ),
             "patronymic": self.get_correct_param(
-                "Добавить новый контакт.\n"
                 "Введите отчество. Отчество должно содержать только кириллицу и начинаться с заглавной буквы.",
-                NAME_PATTERN
+                pattern=NAME_PATTERN
             ),
             "organization": self.get_correct_param(
-                "Добавить новый контакт.\n"
                 "Введите название организации.",
             ),
             "office_number": self.get_correct_param(
-                "Добавить новый контакт.\n"
                 "Введите рабочий номер телефона в формате 89999999999. Номер не должен содержать лишних символов и"
                 "должен содержать 11 цифр.",
-                WORK_PHONE_NUMBER_PATTERN
+                pattern=WORK_PHONE_NUMBER_PATTERN
             ),
             "personal_number": self.get_correct_param(
-                "Добавить новый контакт.\n"
                 "Введите личный номер телефона в формате 89999999999. Номер не должен содержать лишних символов и "
                 "должен содержать 11 цифр.",
-                PERSONAL_PHONE_NUMBER_PATTERN
+                pattern=PERSONAL_PHONE_NUMBER_PATTERN
             ),
         }
         result = self.phonebook.add_contact(**data)
         print(result["message"])
         input("Нажмите любую клавишу чтобы продолжить...")
 
+    def draw_update_contact(self):
+        """Обновление существующего контакта
+
+        Для обновления необходимо ввести номер телефона существующего контакта.
+        """
+        self.clear_console()
+        print("Обновление контакта:")
+        personal_number = self.get_correct_param(
+            "Введите личный номер телефона в формате 89999999999. Номер должен существовать в базе. Номер не"
+            "должен содержать лишних символов и должен содержать 11 цифр.",
+            pattern=PERSONAL_PHONE_NUMBER_PATTERN)
+        contacts: list = self.phonebook.get_contacts(personal_number=personal_number)
+        if contacts:
+            self.clear_console()
+            print("Найден следующий контакт:\n")
+            self.draw_contacts_table(self.get_sorted_list(contacts))
+            print()
+            contact: dict = contacts[0]
+            data: dict = {
+                "first_name": self.get_correct_param(
+                    "Введите имя. Имя должно содержать только кириллицу и начинаться с заглавной буквы. "
+                    "Оставьте поле пустым если хотите оставить текущее значение.",
+                    contact["first_name"],
+                    NAME_PATTERN
+                ),
+                "last_name": self.get_correct_param(
+                    "Введите фамилию. Фамилия должна содержать только кириллицу и начинаться с заглавной буквы. "
+                    "Оставьте поле пустым если хотите оставить текущее значение.",
+                    contact["last_name"],
+                    NAME_PATTERN
+                ),
+                "patronymic": self.get_correct_param(
+                    "Введите отчество. Отчество должно содержать только кириллицу и начинаться с заглавной буквы. "
+                    "Оставьте поле пустым если хотите оставить текущее значение.",
+                    contact["patronymic"],
+                    NAME_PATTERN
+                ),
+                "organization": self.get_correct_param(
+                    "Введите название организации.",
+                    contact["organization"],
+                ),
+                "office_number": self.get_correct_param(
+                    "Введите рабочий номер телефона в формате 89999999999. Номер не должен содержать лишних символов и"
+                    "должен содержать 11 цифр. Оставьте поле пустым если хотите оставить текущее значение.",
+                    contact["office_number"],
+                    WORK_PHONE_NUMBER_PATTERN
+                ),
+                "personal_number": self.get_correct_param(
+                    "Введите личный номер телефона в формате 89999999999. Номер не должен содержать лишних символов и "
+                    "должен содержать 11 цифр. Оставьте поле пустым если хотите оставить текущее значение.",
+                    contact["personal_number"],
+                    PERSONAL_PHONE_NUMBER_PATTERN
+                ),
+            }
+            result: dict = self.phonebook.update_contact(personal_num=contact["personal_number"], **data)
+            print(result["message"])
+        else:
+            print("Контакта с таким личным номером не существует.")
+        input("Нажмите на любую клавишу чтобы продолжить...")
+
+    def draw_delete_contact(self):
+        """Удаление существующего контакта
+
+        Для удаления необходимо ввести номер телефона существующего контакта.
+        """
+        self.clear_console()
+        print("Удаление контакта:")
+        personal_number = self.get_correct_param(
+            "Введите личный номер телефона в формате 89999999999. Номер должен существовать в базе. Номер не"
+            "должен содержать лишних символов и должен содержать 11 цифр.",
+            pattern=PERSONAL_PHONE_NUMBER_PATTERN)
+        contacts: list = self.phonebook.get_contacts(personal_number=personal_number)
+        if contacts:
+            print("Найден следующий контакт:\n")
+            self.draw_contacts_table(self.get_sorted_list(contacts))
+            print()
+            choice = input("Уверены, что хотите удалить контакт? [Да/Нет]: ")
+            if choice.lower() == "да":
+                result: dict = self.phonebook.delete_contact(personal_number=personal_number)
+                print(result["message"])
+            else:
+                print("Контакт не был удален.")
+        else:
+            print("Контакта с таким личным номером не существует.")
+        input("Нажмите на любую клавишу чтобы продолжить...")
+
+
     @staticmethod
-    def get_correct_param(help_text: str, pattern: str = "\\w+") -> str:
+    def get_correct_param(help_text: str, default_value: str | None = None, pattern: str = "\\w+") -> str:
         """Получение от пользователя корректных параметров.
 
         Получение от пользователя параметров, которые должны соответствовать шаблону регулярного выражения pattern.
@@ -184,11 +274,13 @@ class View:
                 строк).
 
         Returns:
-             param (str): Корректный параметр, соответствующий входному шаблону.
+             Корректный параметр, соответствующий входному шаблону.
         """
-        View.clear_console()
+        # View.clear_console()
         print(help_text)
         param: str = input("Введите значение: ")
+        if not param and default_value is not None:
+            return default_value
         while re.match(pattern, param) is None:
             print(f"Введены некорректные данные. {help_text}")
             param: str = input("Введите значение: ")
@@ -202,7 +294,7 @@ class View:
             contacts (list): список контактов
 
         Returns:
-            sorted_contacts (list): отсортированный список контактов в формате [{contact_1}, {contact_2}, ...]
+            Отсортированный список контактов в формате [{contact_1}, {contact_2}, ...]
         """
         sorted_contacts: list = sorted(
             contacts, key=lambda x: (x["last_name"], x["first_name"], x["patronymic"], x["organization"])
@@ -219,8 +311,8 @@ class View:
             num_at_page (int): количество контактов на странице, по умолчанию 5
 
         Returns:
-            paginated_contacts (list): список, содержащий списки контактов размером до num_at_page контактов. Пример:
-                [[{contact_1}, ..., {contact_5}], [{contact_6}, ..., {contact_7}], ...]
+            Список, содержащий списки контактов размером до num_at_page контактов. Пример:
+            [[{contact_1}, ..., {contact_5}], [{contact_6}, ..., {contact_7}], ...]
         """
         result: list = []
         counter: int = 0
