@@ -3,16 +3,30 @@ from tabulate import tabulate
 from phonebook import Phonebook, NAME_PATTERN, PERSONAL_PHONE_NUMBER_PATTERN, WORK_PHONE_NUMBER_PATTERN
 import re
 
+RED_COLOR = "\u001b[31m"
+BLUE_COLOR = "\u001b[34m"
+GREEN_COLOR = "\u001b[32m"
+END_COLOR = "\033[0m"
+
 
 class View:
-    phonebook = Phonebook()
+    __phonebook: Phonebook = Phonebook()
+
+    @staticmethod
+    def draw_logo(logo_text: str = "Phonebook") -> None:
+        """Выводит логотип программы.
+
+        Args:
+            logo_text: Текст логотипа, стандартное значение Phonebook.
+        """
+        print(BLUE_COLOR, sep="", end="")
+        tprint(logo_text, font="clr8x8")
+        print(END_COLOR, sep="", end="")
 
     @staticmethod
     def draw_main_menus_options():
         """Отрисовка разделов главного меню"""
-        View.clear_console()
-        tprint("PhoneBook")
-        print("Главное меню:")
+        print(f"{BLUE_COLOR}Главное меню:{END_COLOR}")
         print("1. Вывод всех контактов.")
         print("2. Найти контакт.")
         print("3. Добавить новый контакт.")
@@ -23,6 +37,8 @@ class View:
     def draw_main_menu(self) -> None:
         """Отрисовка главного меню"""
         while True:
+            self.clear_console()
+            self.draw_logo()
             self.draw_main_menus_options()
             choice: str = input("Выберите пункт [0-5]: ")
             match choice:
@@ -47,7 +63,7 @@ class View:
         """
         if len(contacts) == 0:
             self.clear_console()
-            print("Все контакты:\n")
+            print(f"{BLUE_COLOR}Все контакты:{END_COLOR}")
             input("Список контактов пуст. Нажмите любую клавишу для выхода в меню...")
             return
 
@@ -56,7 +72,7 @@ class View:
         current_page = 1
         while True:
             self.clear_console()
-            print("Все контакты:\n")
+            print(f"{BLUE_COLOR}Все контакты:{END_COLOR}\n")
             self.draw_contacts_table(paginated_contacts[current_page - 1])
             print(f"\nСтр. {current_page}/{max_page}")
 
@@ -81,7 +97,7 @@ class View:
         self.clear_console()
         print("Обновить контакт:")
         pesonal_number: str = input("Введите личный номер телефона существуюего контакта: ")
-        if self.phonebook.get_contacts(personal_number=pesonal_number):
+        if self.__phonebook.get_contacts(personal_number=pesonal_number):
             print(2)
         else:
             input("Контакта с таким личным номером не существует. Нажмите любую клавишу для выхода в меню...")
@@ -116,7 +132,7 @@ class View:
         Returns:
             Отсортированный список в формате [{contact_1}, {contact_2}, ...]
         """
-        contacts: list = self.phonebook.get_contacts(**kwargs)
+        contacts: list = self.__phonebook.get_contacts(**kwargs)
         sorted_contacts: list = self.get_sorted_list(contacts)
         return sorted_contacts
 
@@ -169,7 +185,7 @@ class View:
                 pattern=PERSONAL_PHONE_NUMBER_PATTERN
             ),
         }
-        result = self.phonebook.add_contact(**data)
+        result = self.__phonebook.add_contact(**data)
         print(result["message"])
         input("Нажмите любую клавишу чтобы продолжить...")
 
@@ -184,7 +200,7 @@ class View:
             "Введите личный номер телефона в формате 89999999999. Номер должен существовать в базе. Номер не"
             "должен содержать лишних символов и должен содержать 11 цифр.",
             pattern=PERSONAL_PHONE_NUMBER_PATTERN)
-        contacts: list = self.phonebook.get_contacts(personal_number=personal_number)
+        contacts: list = self.__phonebook.get_contacts(personal_number=personal_number)
         if contacts:
             self.clear_console()
             print("Найден следующий контакт:\n")
@@ -227,7 +243,7 @@ class View:
                     PERSONAL_PHONE_NUMBER_PATTERN
                 ),
             }
-            result: dict = self.phonebook.update_contact(personal_num=contact["personal_number"], **data)
+            result: dict = self.__phonebook.update_contact(personal_num=contact["personal_number"], **data)
             print(result["message"])
         else:
             print("Контакта с таким личным номером не существует.")
@@ -244,14 +260,14 @@ class View:
             "Введите личный номер телефона в формате 89999999999. Номер должен существовать в базе. Номер не"
             "должен содержать лишних символов и должен содержать 11 цифр.",
             pattern=PERSONAL_PHONE_NUMBER_PATTERN)
-        contacts: list = self.phonebook.get_contacts(personal_number=personal_number)
+        contacts: list = self.__phonebook.get_contacts(personal_number=personal_number)
         if contacts:
             print("Найден следующий контакт:\n")
             self.draw_contacts_table(self.get_sorted_list(contacts))
             print()
             choice = input("Уверены, что хотите удалить контакт? [Да/Нет]: ")
             if choice.lower() == "да":
-                result: dict = self.phonebook.delete_contact(personal_number=personal_number)
+                result: dict = self.__phonebook.delete_contact(personal_number=personal_number)
                 print(result["message"])
             else:
                 print("Контакт не был удален.")
@@ -276,7 +292,6 @@ class View:
         Returns:
              Корректный параметр, соответствующий входному шаблону.
         """
-        # View.clear_console()
         print(help_text)
         param: str = input("Введите значение: ")
         if not param and default_value is not None:
